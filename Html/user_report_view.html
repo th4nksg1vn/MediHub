@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Report Dashboard</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .severity-high { border-left: 4px solid #ef4444; }
+        .severity-medium { border-left: 4px solid #f59e0b; }
+        .severity-low { border-left: 4px solid #10b981; }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="min-h-full bg-gray-50 font-sans"><!-- Header -->
+  <header class="bg-white shadow-sm border-b">
+   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center justify-between">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+       </svg>
+      </div>
+      <div>
+       <h1 id="dashboard-title" class="text-2xl font-bold text-gray-900">Medical Report Dashboard</h1>
+       <p id="welcome-message" class="text-sm text-gray-600">Track your complete medical history</p>
+      </div>
+     </div>
+     <div class="text-right">
+      <p id="patient-name" class="text-lg font-semibold text-gray-900">John Smith</p>
+      <p class="text-sm text-gray-600">Patient ID: #12345</p>
+     </div>
+    </div>
+   </div>
+  </header>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Loading State -->
+   <div id="loadingState" class="text-center py-12">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <p class="mt-2 text-gray-600">Loading your medical records...</p>
+   </div><!-- Dashboard Content -->
+   <div id="dashboardContent" class="hidden space-y-8"><!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+     <div class="bg-white rounded-lg shadow-sm p-6 border">
+      <div class="flex items-center">
+       <div class="flex-shrink-0">
+        <div class="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
+         <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+         </svg>
+        </div>
+       </div>
+       <div class="ml-4">
+        <p class="text-sm font-medium text-gray-600">Total Records</p>
+        <p id="totalRecords" class="text-2xl font-semibold text-gray-900">0</p>
+       </div>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg shadow-sm p-6 border">
+      <div class="flex items-center">
+       <div class="flex-shrink-0">
+        <div class="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
+         <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+         </svg>
+        </div>
+       </div>
+       <div class="ml-4">
+        <p class="text-sm font-medium text-gray-600">Recovered</p>
+        <p id="recoveredCount" class="text-2xl font-semibold text-gray-900">0</p>
+       </div>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg shadow-sm p-6 border">
+      <div class="flex items-center">
+       <div class="flex-shrink-0">
+        <div class="h-8 w-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+         <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+         </svg>
+        </div>
+       </div>
+       <div class="ml-4">
+        <p class="text-sm font-medium text-gray-600">Ongoing</p>
+        <p id="ongoingCount" class="text-2xl font-semibold text-gray-900">0</p>
+       </div>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg shadow-sm p-6 border">
+      <div class="flex items-center">
+       <div class="flex-shrink-0">
+        <div class="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
+         <svg class="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+         </svg>
+        </div>
+       </div>
+       <div class="ml-4">
+        <p class="text-sm font-medium text-gray-600">Hospitals Visited</p>
+        <p id="hospitalCount" class="text-2xl font-semibold text-gray-900">0</p>
+       </div>
+      </div>
+     </div>
+    </div><!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+     <div class="bg-white rounded-lg shadow-sm p-6 border">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Records by Severity</h3>
+      <div class="h-64">
+       <canvas id="severityChart"></canvas>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg shadow-sm p-6 border">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Records Timeline</h3>
+      <div class="h-64">
+       <canvas id="timelineChart"></canvas>
+      </div>
+     </div>
+    </div><!-- Recent Records -->
+    <div class="bg-white rounded-lg shadow-sm border">
+     <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">Medical Records</h3>
+     </div>
+     <div id="recordsList" class="divide-y divide-gray-200"><!-- Records will be populated here -->
+     </div>
+    </div>
+   </div>
+  </main>
+  <script>
+        // Default configuration
+        const defaultConfig = {
+            dashboard_title: "Medical Report Dashboard",
+            welcome_message: "Track your complete medical history",
+            patient_name: "John Smith"
+        };
+
+        // Sample medical records data
+        let medicalRecords = [
+            {
+                id: "1",
+                date: "2024-01-15",
+                disease: "Hypertension",
+                hospital: "City General Hospital",
+                doctor: "Dr. Sarah Johnson",
+                medications: "Lisinopril, Amlodipine",
+                dosage: "10mg daily, 5mg daily",
+                notes: "Blood pressure well controlled. Continue current medication regimen.",
+                severity: "Medium",
+                status: "Ongoing",
+                createdAt: "2024-01-15T10:30:00Z"
+            },
+            {
+                id: "2",
+                date: "2024-02-20",
+                disease: "Type 2 Diabetes",
+                hospital: "Metro Medical Center",
+                doctor: "Dr. Michael Chen",
+                medications: "Metformin, Glipizide",
+                dosage: "500mg twice daily, 5mg daily",
+                notes: "HbA1c levels improving. Patient advised on dietary modifications.",
+                severity: "High",
+                status: "Ongoing",
+                createdAt: "2024-02-20T14:15:00Z"
+            },
+            {
+                id: "3",
+                date: "2024-03-10",
+                disease: "Acute Bronchitis",
+                hospital: "Riverside Clinic",
+                doctor: "Dr. Emily Rodriguez",
+                medications: "Azithromycin, Albuterol inhaler",
+                dosage: "250mg daily for 5 days, 2 puffs as needed",
+                notes: "Symptoms resolved after antibiotic course. Follow-up not required.",
+                severity: "Low",
+                status: "Recovered",
+                createdAt: "2024-03-10T09:45:00Z"
+            },
+            {
+                id: "4",
+                date: "2024-04-05",
+                disease: "Migraine",
+                hospital: "Neurological Associates",
+                doctor: "Dr. David Park",
+                medications: "Sumatriptan, Propranolol",
+                dosage: "50mg as needed, 40mg twice daily",
+                notes: "Frequency of migraines reduced with preventive medication.",
+                severity: "Medium",
+                status: "Monitoring",
+                createdAt: "2024-04-05T16:20:00Z"
+            },
+            {
+                id: "5",
+                date: "2024-05-12",
+                disease: "Seasonal Allergies",
+                hospital: "Family Health Center",
+                doctor: "Dr. Lisa Thompson",
+                medications: "Cetirizine, Fluticasone nasal spray",
+                dosage: "10mg daily, 2 sprays each nostril daily",
+                notes: "Symptoms well managed during allergy season.",
+                severity: "Low",
+                status: "Ongoing",
+                createdAt: "2024-05-12T11:00:00Z"
+            },
+            {
+                id: "6",
+                date: "2024-06-18",
+                disease: "Gastroesophageal Reflux Disease",
+                hospital: "Digestive Health Clinic",
+                doctor: "Dr. Robert Kim",
+                medications: "Omeprazole",
+                dosage: "20mg daily before breakfast",
+                notes: "Symptoms significantly improved. Continue PPI therapy.",
+                severity: "Medium",
+                status: "Ongoing",
+                createdAt: "2024-06-18T13:30:00Z"
+            },
+            {
+                id: "7",
+                date: "2024-07-22",
+                disease: "Sprained Ankle",
+                hospital: "Sports Medicine Center",
+                doctor: "Dr. Jennifer Walsh",
+                medications: "Ibuprofen",
+                dosage: "400mg three times daily with food",
+                notes: "Grade 1 sprain. Physical therapy completed successfully.",
+                severity: "Low",
+                status: "Recovered",
+                createdAt: "2024-07-22T08:15:00Z"
+            },
+            {
+                id: "8",
+                date: "2024-08-30",
+                disease: "High Cholesterol",
+                hospital: "Cardiology Specialists",
+                doctor: "Dr. Mark Anderson",
+                medications: "Atorvastatin",
+                dosage: "20mg daily at bedtime",
+                notes: "LDL cholesterol levels decreased. Continue statin therapy.",
+                severity: "Medium",
+                status: "Ongoing",
+                createdAt: "2024-08-30T15:45:00Z"
+            },
+            {
+                id: "9",
+                date: "2024-09-15",
+                disease: "Vitamin D Deficiency",
+                hospital: "Primary Care Associates",
+                doctor: "Dr. Amanda Foster",
+                medications: "Vitamin D3 supplement",
+                dosage: "2000 IU daily",
+                notes: "Levels normalized after 3 months of supplementation.",
+                severity: "Low",
+                status: "Recovered",
+                createdAt: "2024-09-15T10:00:00Z"
+            },
+            {
+                id: "10",
+                date: "2024-10-08",
+                disease: "Anxiety Disorder",
+                hospital: "Mental Health Center",
+                doctor: "Dr. Rachel Green",
+                medications: "Sertraline",
+                dosage: "50mg daily",
+                notes: "Patient responding well to treatment. Regular therapy sessions ongoing.",
+                severity: "Medium",
+                status: "Ongoing",
+                createdAt: "2024-10-08T14:30:00Z"
+            }
+        ];
+        
+        let severityChart = null;
+        let timelineChart = null;
+
+        // Initialize app with sample data
+        function initializeApp() {
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const loadingState = document.getElementById('loadingState');
+            const dashboardContent = document.getElementById('dashboardContent');
+
+            loadingState.classList.add('hidden');
+            dashboardContent.classList.remove('hidden');
+            
+            updateStatistics();
+            updateCharts();
+            updateRecordsList();
+        }
+
+        function updateStatistics() {
+            const totalRecords = medicalRecords.length;
+            const recoveredCount = medicalRecords.filter(r => r.status === 'Recovered').length;
+            const ongoingCount = medicalRecords.filter(r => r.status === 'Ongoing').length;
+            const uniqueHospitals = new Set(medicalRecords.map(r => r.hospital)).size;
+
+            document.getElementById('totalRecords').textContent = totalRecords;
+            document.getElementById('recoveredCount').textContent = recoveredCount;
+            document.getElementById('ongoingCount').textContent = ongoingCount;
+            document.getElementById('hospitalCount').textContent = uniqueHospitals;
+        }
+
+        function updateCharts() {
+            updateSeverityChart();
+            updateTimelineChart();
+        }
+
+        function updateSeverityChart() {
+            const ctx = document.getElementById('severityChart').getContext('2d');
+            
+            if (severityChart) {
+                severityChart.destroy();
+            }
+
+            const severityCounts = {
+                'Low': medicalRecords.filter(r => r.severity === 'Low').length,
+                'Medium': medicalRecords.filter(r => r.severity === 'Medium').length,
+                'High': medicalRecords.filter(r => r.severity === 'High').length
+            };
+
+            severityChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low', 'Medium', 'High'],
+                    datasets: [{
+                        data: [severityCounts.Low, severityCounts.Medium, severityCounts.High],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTimelineChart() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            if (timelineChart) {
+                timelineChart.destroy();
+            }
+
+            // Group records by month
+            const monthCounts = {};
+            medicalRecords.forEach(record => {
+                const date = new Date(record.date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+            });
+
+            const sortedMonths = Object.keys(monthCounts).sort();
+            const counts = sortedMonths.map(month => monthCounts[month]);
+
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths.map(month => {
+                        const [year, monthNum] = month.split('-');
+                        return new Date(year, monthNum - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }),
+                    datasets: [{
+                        label: 'Medical Records',
+                        data: counts,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRecordsList() {
+            const recordsList = document.getElementById('recordsList');
+            recordsList.innerHTML = '';
+
+            const sortedRecords = [...medicalRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedRecords.forEach(record => {
+                const recordElement = createRecordElement(record);
+                recordsList.appendChild(recordElement);
+            });
+        }
+
+        function createRecordElement(record) {
+            const div = document.createElement('div');
+            div.className = `p-6 hover:bg-gray-50 transition-colors duration-200 severity-${record.severity.toLowerCase()}`;
+            
+            const date = new Date(record.date).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            div.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <h4 class="text-lg font-semibold text-gray-900">${record.disease}</h4>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(record.status)}">
+                                ${record.status}
+                            </span>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${getSeverityBadgeClass(record.severity)}">
+                                ${record.severity}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+                            <div class="flex items-center space-x-2">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>${date}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                <span>${record.hospital}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <span>${record.doctor}</span>
+                            </div>
+                            ${record.medications ? `
+                                <div class="flex items-center space-x-2">
+                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                    </svg>
+                                    <span>${record.medications}</span>
+                                </div>
+                            ` : ''}
+                            ${record.dosage ? `
+                                <div class="flex items-center space-x-2">
+                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>${record.dosage}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${record.notes ? `
+                            <div class="mt-3 p-3 bg-gray-50 rounded-md">
+                                <p class="text-sm text-gray-700">${record.notes}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                </div>
+            `;
+
+            return div;
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'Recovered': return 'bg-green-100 text-green-800';
+                case 'Ongoing': return 'bg-yellow-100 text-yellow-800';
+                case 'Monitoring': return 'bg-blue-100 text-blue-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getSeverityBadgeClass(severity) {
+            switch (severity) {
+                case 'High': return 'bg-red-100 text-red-800';
+                case 'Medium': return 'bg-yellow-100 text-yellow-800';
+                case 'Low': return 'bg-green-100 text-green-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+
+
+
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${type === 'error' ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'} fade-in`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 ${type === 'error' ? 'text-red-400' : 'text-green-400'}" fill="currentColor" viewBox="0 0 20 20">
+                        ${type === 'error' ? 
+                            '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>' :
+                            '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>'
+                        }
+                    </svg>
+                    <p class="ml-3 text-sm ${type === 'error' ? 'text-red-700' : 'text-green-700'}">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 5000);
+        }
+
+        // Element SDK implementation
+        async function onConfigChange(config) {
+            const dashboardTitle = config.dashboard_title || defaultConfig.dashboard_title;
+            const welcomeMessage = config.welcome_message || defaultConfig.welcome_message;
+            const patientName = config.patient_name || defaultConfig.patient_name;
+
+            document.getElementById('dashboard-title').textContent = dashboardTitle;
+            document.getElementById('welcome-message').textContent = welcomeMessage;
+            document.getElementById('patient-name').textContent = patientName;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["dashboard_title", config.dashboard_title || defaultConfig.dashboard_title],
+                ["welcome_message", config.welcome_message || defaultConfig.welcome_message],
+                ["patient_name", config.patient_name || defaultConfig.patient_name]
+            ]);
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange,
+                    mapToCapabilities,
+                    mapToEditPanelValues
+                });
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'994309c317133eb9',t:'MTc2MTQwOTE5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

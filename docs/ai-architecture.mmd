@@ -1,0 +1,30 @@
+%% ConnectedCare — AI Architecture (Mermaid)
+flowchart LR
+  subgraph Frontend
+    U[User / Next.js App] --> NAPI[Next.js API Routes]
+  end
+
+  NAPI --> Redis{Redis Cache}
+  Redis -->|miss| Gateway[FastAPI Gateway (/triage, /analyze_trends)]
+
+  subgraph ML
+    Gateway --> LLM[LLM (OpenAI / fine-tuned GPT)]
+    Gateway --> TrendModel[Trend Model (scikit-learn / PyTorch)]
+  end
+
+  LLM --> Gateway
+  TrendModel --> Gateway
+
+  Gateway --> Supa[Supabase (Postgres + Auth + Realtime)]
+  Gateway --> Redis
+
+  Supa -->|realtime events| Worker[Worker / Background Job]
+  Worker --> Gateway
+  Worker --> Notifications[Notifications / Alerts]
+
+  %% External & infra
+  Gateway -.->|optional| ObjectStorage[(S3 / Storage)]
+  Gateway -.->|optional| Metrics[(Prometheus / Grafana)]
+
+  %% Notes
+  click Gateway "#" "FastAPI gateway: handles auth, rate-limits, calls LLM and trend models"

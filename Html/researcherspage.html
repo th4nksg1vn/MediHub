@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediHub - Researcher Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #F7F7F7;
+            color: #000E29;
+            min-height: 100%;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .logo {
+            font-size: 64px;
+            font-weight: 700;
+            color: #0A5CFF;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            color: #6296FF;
+            font-weight: 500;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: #F7F7F7;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 8px rgba(10, 92, 255, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px 24px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6296FF;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: #0A5CFF;
+            color: #F7F7F7;
+            box-shadow: 0 2px 8px rgba(10, 92, 255, 0.3);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: rgba(10, 92, 255, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            background-color: #F7F7F7;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 16px rgba(10, 92, 255, 0.1);
+            border: 1px solid rgba(10, 92, 255, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .researcher-card {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0A5CFF, #6296FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 48px;
+            font-weight: 600;
+            color: #F7F7F7;
+        }
+
+        .researcher-name {
+            font-size: 32px;
+            font-weight: 600;
+            color: #000E29;
+            margin-bottom: 8px;
+        }
+
+        .researcher-type {
+            font-size: 16px;
+            color: #6296FF;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .info-item {
+            background-color: rgba(10, 92, 255, 0.05);
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid #0A5CFF;
+        }
+
+        .info-label {
+            font-size: 16px;
+            color: #6296FF;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #000E29;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .request-btn {
+            background: linear-gradient(135deg, #0A5CFF, #003DB8);
+            color: #F7F7F7;
+            border: none;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .request-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(10, 92, 255, 0.3);
+        }
+
+        .request-btn:active {
+            transform: translateY(0);
+        }
+
+        .status-card {
+            background-color: rgba(10, 92, 255, 0.05);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #6296FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+        }
+
+        .status-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #000E29;
+            margin-bottom: 16px;
+        }
+
+        .status-description {
+            font-size: 16px;
+            color: #6296FF;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .approval-info {
+            background-color: #F7F7F7;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid rgba(10, 92, 255, 0.2);
+        }
+
+        .approval-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000E29;
+            margin-bottom: 16px;
+        }
+
+        .approval-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(10, 92, 255, 0.1);
+        }
+
+        .approval-item:last-child {
+            border-bottom: none;
+        }
+
+        .approval-label {
+            font-size: 16px;
+            color: #6296FF;
+        }
+
+        .approval-value {
+            font-size: 16px;
+            color: #000E29;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                margin-bottom: 8px;
+            }
+
+            .tab:last-child {
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">MediHub</div>
+            <div class="subtitle">Researcher Profile</div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('info')">Researcher Information</button>
+            <button class="tab" onclick="switchTab('status')">Access Request Status</button>
+        </div>
+
+        <div id="info-tab" class="tab-content active">
+            <div class="researcher-card">
+                <div class="avatar">AK</div>
+                <h1 class="researcher-name">Dr. Amara Kone</h1>
+                <div class="researcher-type">Faculty Member</div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Institution</div>
+                    <div class="info-value">University of Cape Town<br>Faculty of Health Sciences</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">Public Health & Family Medicine</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Research Focus</div>
+                    <div class="info-value">Infectious Disease Epidemiology<br>Community Health Interventions</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Experience</div>
+                    <div class="info-value">8 years in clinical research<br>15+ published papers</div>
+                </div>
+            </div>
+
+            <button class="request-btn" onclick="requestAccess()">Request Data Access</button>
+        </div>
+
+        <div id="status-tab" class="tab-content">
+            <div class="status-card">
+                <div class="status-icon">⏳</div>
+                <h2 class="status-title">Access Request Pending</h2>
+                <p class="status-description">
+                    Your request for data access has been submitted and is currently under review by our medical advisory board. 
+                    You will receive an email notification once the review is complete.
+                </p>
+            </div>
+
+            <div class="approval-info">
+                <h3 class="approval-title">Request Details</h3>
+                <div class="approval-item">
+                    <span class="approval-label">Submitted Date</span>
+                    <span class="approval-value">March 15, 2024</span>
+                </div>
+                <div class="approval-item">
+                    <span class="approval-label">Request Type</span>
+                    <span class="approval-value">Full Dataset Access</span>
+                </div>
+                <div class="approval-item">
+                    <span class="approval-label">Review Status</span>
+                    <span class="approval-value">Under Medical Review</span>
+                </div>
+                <div class="approval-item">
+                    <span class="approval-label">Expected Response</span>
+                    <span class="approval-value">5-7 business days</span>
+                </div>
+                <div class="approval-item">
+                    <span class="approval-label">Reviewing Doctor</span>
+                    <span class="approval-value">Dr. Kwame Asante</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function requestAccess() {
+            // Switch to status tab to show the request
+            switchTab('status');
+            
+            // Update the tab button to active state
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[1].classList.add('active');
+            
+            // Show a brief confirmation
+            const statusCard = document.querySelector('.status-card');
+            const originalContent = statusCard.innerHTML;
+            
+            statusCard.innerHTML = `
+                <div class="status-icon">✅</div>
+                <h2 class="status-title">Request Submitted Successfully!</h2>
+                <p class="status-description">
+                    Your access request has been submitted to the medical review board. 
+                    You'll receive updates on the status below.
+                </p>
+            `;
+            
+            // Revert back after 3 seconds
+            setTimeout(() => {
+                statusCard.innerHTML = originalContent;
+            }, 3000);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99496ffd73efcbbc',t:'MTc2MTQ3NjI5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

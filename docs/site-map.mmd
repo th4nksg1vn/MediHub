@@ -1,0 +1,54 @@
+%% ConnectedCare — Site Map (Mermaid)
+flowchart LR
+  subgraph Public
+    A[Landing / Home] --> About[/About]
+    A --> Contact[/Contact]
+    A --> Login[/Login]
+    A --> Register[/Register]
+  end
+
+  Login --> Auth[Auth (Supabase)]
+  Register --> Auth
+
+  subgraph Patient
+    P1[Patient Dashboard] --> P2[Check-in (/check-in)]
+    P1 --> P3[History (/history)]
+    P1 --> P4[Family (/family)]
+    P1 --> P5[Recommendations (/recommendations)]
+    P1 --> P6[Profile (/profile)]
+  end
+
+  subgraph Doctor
+    D1[Doctor Dashboard] --> D2[Patient Overview (/doctor/patient/:id)]
+    D1 --> D3[Reports (/doctor/reports)]
+    D1 --> D4[Requests (/doctor/requests)]
+  end
+
+  subgraph Institution
+    I1[Institution Dashboard (/institution/dashboard)] --> I2[Reports (/institution/reports)]
+    I1 --> I3[Consent (/institution/consent)]
+  end
+
+  subgraph Admin
+    AD1[Admin Dashboard] --> AD2[Logs]
+    AD1 --> AD3[Research Approvals]
+  end
+
+  %% cross-links
+  Auth -->|role: patient| P1
+  Auth -->|role: doctor| D1
+  Auth -->|role: institution| I1
+  Auth -->|role: admin| AD1
+
+  %% AI assistant & realtime
+  A --> AI[AI Assistant (chat / suggestions)]
+  P2 --> AI
+  P1 --> AI
+  D1 --> AI
+
+  %% Public footer links
+  A --> Privacy[/Privacy Policy]
+
+  %% visual grouping
+  classDef role fill:#f3f4f6,stroke:#ddd
+  class Patient,Doctor,Institution,Admin role

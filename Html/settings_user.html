@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Healthcare Settings</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .settings-section {
+            transition: all 0.3s ease;
+        }
+        
+        .settings-section:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #3b82f6;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        .section-header {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .section-header:hover {
+            background-color: #f8fafc;
+        }
+        
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .section-content.expanded {
+            max-height: 1000px;
+        }
+        
+        .save-indicator {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .save-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .time-picker {
+            appearance: none;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .theme-option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .theme-option:hover {
+            transform: scale(1.05);
+        }
+        
+        .theme-option.selected {
+            ring: 2px;
+            ring-color: #3b82f6;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="min-h-full bg-gradient-to-br from-slate-50 to-blue-100 font-sans"><!-- Header -->
+  <header class="bg-white shadow-lg border-b">
+   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex items-center justify-between">
+     <div class="flex items-center space-x-4">
+      <div class="h-12 w-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+       <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+       </svg>
+      </div>
+      <div>
+       <h1 id="page-title" class="text-3xl font-bold text-gray-900">Healthcare Settings</h1>
+       <p class="text-sm text-gray-600">Customize your healthcare management experience</p>
+      </div>
+     </div>
+     <div class="text-right">
+      <p id="user-name" class="text-xl font-semibold text-gray-900">Sarah Johnson</p>
+      <p class="text-sm text-gray-600">Account Settings</p>
+     </div>
+    </div>
+   </div>
+  </header><!-- Save Indicator -->
+  <div id="save-indicator" class="save-indicator fixed top-20 right-4 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+   <div class="flex items-center">
+    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg> Settings saved automatically
+   </div>
+  </div>
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Notification Preferences -->
+   <div class="settings-section bg-white rounded-xl shadow-sm border mb-6">
+    <div class="section-header px-6 py-4 border-b border-gray-200 flex items-center justify-between" onclick="toggleSection('notifications')">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+       </svg>
+      </div>
+      <div>
+       <h2 class="text-xl font-semibold text-gray-900">Notification Preferences</h2>
+       <p class="text-sm text-gray-600">Manage your alerts and reminders</p>
+      </div>
+     </div>
+     <svg id="notifications-arrow" class="h-5 w-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+     </svg>
+    </div>
+    <div id="notifications-content" class="section-content expanded">
+     <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Medication Reminders</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Enable medication alerts</span> <label class="toggle-switch"> <input type="checkbox" id="med-alerts" checked onchange="saveSetting('medAlerts', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Missed dose notifications</span> <label class="toggle-switch"> <input type="checkbox" id="missed-dose" checked onchange="saveSetting('missedDose', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Refill reminders</span> <label class="toggle-switch"> <input type="checkbox" id="refill-alerts" checked onchange="saveSetting('refillAlerts', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Refill threshold (days)</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('refillThreshold', this.value)"> <option value="3">3 days</option> <option value="5" selected>5 days</option> <option value="7">7 days</option> <option value="10">10 days</option> </select>
+         </div>
+        </div>
+       </div>
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Appointment Alerts</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">1 day before</span> <label class="toggle-switch"> <input type="checkbox" id="appt-1day" checked onchange="saveSetting('appt1Day', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">2 hours before</span> <label class="toggle-switch"> <input type="checkbox" id="appt-2hour" checked onchange="saveSetting('appt2Hour', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">30 minutes before</span> <label class="toggle-switch"> <input type="checkbox" id="appt-30min" onchange="saveSetting('appt30Min', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Lab result notifications</span> <label class="toggle-switch"> <input type="checkbox" id="lab-results" checked onchange="saveSetting('labResults', this.checked)"> <span class="slider"></span> </label>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="border-t pt-4">
+       <h3 class="font-medium text-gray-900 mb-4">Sound &amp; Vibration</h3>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Sound notifications</span> <label class="toggle-switch"> <input type="checkbox" id="sound-notif" checked onchange="saveSetting('soundNotif', this.checked)"> <span class="slider"></span> </label>
+        </div>
+        <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Vibration</span> <label class="toggle-switch"> <input type="checkbox" id="vibration" checked onchange="saveSetting('vibration', this.checked)"> <span class="slider"></span> </label>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Personal Information -->
+   <div class="settings-section bg-white rounded-xl shadow-sm border mb-6">
+    <div class="section-header px-6 py-4 border-b border-gray-200 flex items-center justify-between" onclick="toggleSection('personal')">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+       </svg>
+      </div>
+      <div>
+       <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
+       <p class="text-sm text-gray-600">Update your profile and contact details</p>
+      </div>
+     </div>
+     <svg id="personal-arrow" class="h-5 w-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+     </svg>
+    </div>
+    <div id="personal-content" class="section-content">
+     <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label> <input type="text" id="full-name" value="Sarah Johnson" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('fullName', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label> <input type="email" id="email" value="sarah.johnson@email.com" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('email', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label> <input type="tel" id="phone" value="+1 (555) 123-4567" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('phone', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label> <input type="date" id="dob" value="1985-06-15" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('dob', this.value)">
+        </div>
+       </div>
+       <div class="space-y-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</label> <input type="text" id="emergency-name" value="John Johnson" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('emergencyName', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</label> <input type="tel" id="emergency-phone" value="+1 (555) 987-6543" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('emergencyPhone', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Insurance Provider</label> <input type="text" id="insurance" value="Blue Cross Blue Shield" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('insurance', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Medical ID Number</label> <input type="text" id="medical-id" value="MED123456789" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('medicalId', this.value)">
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Healthcare Providers -->
+   <div class="settings-section bg-white rounded-xl shadow-sm border mb-6">
+    <div class="section-header px-6 py-4 border-b border-gray-200 flex items-center justify-between" onclick="toggleSection('providers')">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+       </svg>
+      </div>
+      <div>
+       <h2 class="text-xl font-semibold text-gray-900">Healthcare Providers</h2>
+       <p class="text-sm text-gray-600">Manage your doctors and healthcare facilities</p>
+      </div>
+     </div>
+     <svg id="providers-arrow" class="h-5 w-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+     </svg>
+    </div>
+    <div id="providers-content" class="section-content">
+     <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Primary Care Physician</label> <input type="text" id="primary-doctor" value="Dr. Amanda Foster" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('primaryDoctor', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Primary Hospital/Clinic</label> <input type="text" id="primary-hospital" value="City General Hospital" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('primaryHospital', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Cardiologist</label> <input type="text" id="cardiologist" value="Dr. Mark Anderson" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('cardiologist', this.value)">
+        </div>
+       </div>
+       <div class="space-y-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Preferred Pharmacy</label> <input type="text" id="pharmacy" value="CVS Pharmacy - Main Street" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('pharmacy', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Pharmacy Phone</label> <input type="tel" id="pharmacy-phone" value="+1 (555) 246-8135" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('pharmacyPhone', this.value)">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Specialist (Other)</label> <input type="text" id="specialist" value="Dr. Rachel Green - Mental Health" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" onchange="saveSetting('specialist', this.value)">
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Medication Settings -->
+   <div class="settings-section bg-white rounded-xl shadow-sm border mb-6">
+    <div class="section-header px-6 py-4 border-b border-gray-200 flex items-center justify-between" onclick="toggleSection('medication')">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-orange-100 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+       </svg>
+      </div>
+      <div>
+       <h2 class="text-xl font-semibold text-gray-900">Medication Settings</h2>
+       <p class="text-sm text-gray-600">Configure medication reminder preferences</p>
+      </div>
+     </div>
+     <svg id="medication-arrow" class="h-5 w-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+     </svg>
+    </div>
+    <div id="medication-content" class="section-content">
+     <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Default Reminder Times</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Morning dose</label> <input type="time" id="morning-time" value="08:00" class="time-picker" onchange="saveSetting('morningTime', this.value)">
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Afternoon dose</label> <input type="time" id="afternoon-time" value="14:00" class="time-picker" onchange="saveSetting('afternoonTime', this.value)">
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Evening dose</label> <input type="time" id="evening-time" value="20:00" class="time-picker" onchange="saveSetting('eveningTime', this.value)">
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Bedtime dose</label> <input type="time" id="bedtime-time" value="22:00" class="time-picker" onchange="saveSetting('bedtimeTime', this.value)">
+         </div>
+        </div>
+       </div>
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Alert Settings</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Interaction warnings</span> <label class="toggle-switch"> <input type="checkbox" id="interaction-warnings" checked onchange="saveSetting('interactionWarnings', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Duplicate dose alerts</span> <label class="toggle-switch"> <input type="checkbox" id="duplicate-alerts" checked onchange="saveSetting('duplicateAlerts', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Snooze duration (minutes)</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('snoozeDuration', this.value)"> <option value="5">5 minutes</option> <option value="10">10 minutes</option> <option value="15" selected>15 minutes</option> <option value="30">30 minutes</option> </select>
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Max snooze attempts</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('maxSnooze', this.value)"> <option value="1">1 time</option> <option value="2">2 times</option> <option value="3" selected>3 times</option> <option value="5">5 times</option> </select>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Privacy & Security -->
+   <div class="settings-section bg-white rounded-xl shadow-sm border mb-6">
+    <div class="section-header px-6 py-4 border-b border-gray-200 flex items-center justify-between" onclick="toggleSection('privacy')">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+       </svg>
+      </div>
+      <div>
+       <h2 class="text-xl font-semibold text-gray-900">Privacy &amp; Security</h2>
+       <p class="text-sm text-gray-600">Control your data and security preferences</p>
+      </div>
+     </div>
+     <svg id="privacy-arrow" class="h-5 w-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+     </svg>
+    </div>
+    <div id="privacy-content" class="section-content">
+     <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Data Sharing</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Share with healthcare providers</span> <label class="toggle-switch"> <input type="checkbox" id="share-providers" checked onchange="saveSetting('shareProviders', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Emergency access</span> <label class="toggle-switch"> <input type="checkbox" id="emergency-access" checked onchange="saveSetting('emergencyAccess', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Anonymous analytics</span> <label class="toggle-switch"> <input type="checkbox" id="analytics" onchange="saveSetting('analytics', this.checked)"> <span class="slider"></span> </label>
+         </div>
+        </div>
+       </div>
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Backup &amp; Security</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Auto backup</span> <label class="toggle-switch"> <input type="checkbox" id="auto-backup" checked onchange="saveSetting('autoBackup', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Biometric unlock</span> <label class="toggle-switch"> <input type="checkbox" id="biometric" checked onchange="saveSetting('biometric', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Auto-lock timeout</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('autoLock', this.value)"> <option value="1">1 minute</option> <option value="5" selected>5 minutes</option> <option value="15">15 minutes</option> <option value="30">30 minutes</option> <option value="never">Never</option> </select>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Display Preferences -->
+   <div class="settings-section bg-white rounded-xl shadow-sm border mb-6">
+    <div class="section-header px-6 py-4 border-b border-gray-200 flex items-center justify-between" onclick="toggleSection('display')">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+       </svg>
+      </div>
+      <div>
+       <h2 class="text-xl font-semibold text-gray-900">Display Preferences</h2>
+       <p class="text-sm text-gray-600">Customize the app appearance and behavior</p>
+      </div>
+     </div>
+     <svg id="display-arrow" class="h-5 w-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+     </svg>
+    </div>
+    <div id="display-content" class="section-content">
+     <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Theme</h3>
+        <div class="grid grid-cols-3 gap-3">
+         <div class="theme-option selected p-3 border-2 border-blue-500 rounded-lg text-center cursor-pointer" onclick="selectTheme('light', this)">
+          <div class="h-8 w-full bg-white border rounded mb-2"></div><span class="text-xs font-medium">Light</span>
+         </div>
+         <div class="theme-option p-3 border-2 border-gray-200 rounded-lg text-center cursor-pointer" onclick="selectTheme('dark', this)">
+          <div class="h-8 w-full bg-gray-800 rounded mb-2"></div><span class="text-xs font-medium">Dark</span>
+         </div>
+         <div class="theme-option p-3 border-2 border-gray-200 rounded-lg text-center cursor-pointer" onclick="selectTheme('auto', this)">
+          <div class="h-8 w-full bg-gradient-to-r from-white to-gray-800 rounded mb-2"></div><span class="text-xs font-medium">Auto</span>
+         </div>
+        </div>
+       </div>
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Text &amp; Language</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Font size</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('fontSize', this.value)"> <option value="small">Small</option> <option value="medium" selected>Medium</option> <option value="large">Large</option> <option value="xlarge">Extra Large</option> </select>
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Language</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('language', this.value)"> <option value="en" selected>English</option> <option value="es">Español</option> <option value="fr">Français</option> <option value="de">Deutsch</option> </select>
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Time format</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('timeFormat', this.value)"> <option value="12" selected>12-hour</option> <option value="24">24-hour</option> </select>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- App Behavior -->
+   <div class="settings-section bg-white rounded-xl shadow-sm border mb-6">
+    <div class="section-header px-6 py-4 border-b border-gray-200 flex items-center justify-between" onclick="toggleSection('behavior')">
+     <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 bg-teal-100 rounded-lg flex items-center justify-center">
+       <svg class="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+       </svg>
+      </div>
+      <div>
+       <h2 class="text-xl font-semibold text-gray-900">App Behavior</h2>
+       <p class="text-sm text-gray-600">Configure sync, export, and reset options</p>
+      </div>
+     </div>
+     <svg id="behavior-arrow" class="h-5 w-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+     </svg>
+    </div>
+    <div id="behavior-content" class="section-content">
+     <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Sync &amp; Data</h3>
+        <div class="space-y-3">
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Auto-sync</span> <label class="toggle-switch"> <input type="checkbox" id="auto-sync" checked onchange="saveSetting('autoSync', this.checked)"> <span class="slider"></span> </label>
+         </div>
+         <div class="flex items-center justify-between"><label class="text-sm text-gray-700">Sync frequency</label> <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="saveSetting('syncFreq', this.value)"> <option value="realtime">Real-time</option> <option value="5min" selected>Every 5 minutes</option> <option value="15min">Every 15 minutes</option> <option value="1hour">Every hour</option> </select>
+         </div>
+         <div class="flex items-center justify-between"><span class="text-sm text-gray-700">Offline mode</span> <label class="toggle-switch"> <input type="checkbox" id="offline-mode" checked onchange="saveSetting('offlineMode', this.checked)"> <span class="slider"></span> </label>
+         </div>
+        </div>
+       </div>
+       <div class="space-y-4">
+        <h3 class="font-medium text-gray-900">Data Management</h3>
+        <div class="space-y-3"><button onclick="exportData()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"> Export My Data </button> <button onclick="resetSettings()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm"> Reset to Defaults </button> <button onclick="clearAllData()" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"> Clear All Data </button>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Support & Help -->
+   <div class="bg-white rounded-xl shadow-sm border p-6">
+    <div class="flex items-center space-x-3 mb-4">
+     <div class="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center">
+      <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+     </div>
+     <div>
+      <h2 class="text-xl font-semibold text-gray-900">Support &amp; Help</h2>
+      <p class="text-sm text-gray-600">Get help and contact support</p>
+     </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button onclick="showHelp()" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left"> <h3 class="font-medium text-gray-900 mb-1">Help Center</h3><p class="text-sm text-gray-600">Browse frequently asked questions</p></button> <button onclick="contactSupport()" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left"> <h3 class="font-medium text-gray-900 mb-1">Contact Support</h3><p class="text-sm text-gray-600" id="support-email">support@healthcare.com</p></button> <button onclick="sendFeedback()" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left"> <h3 class="font-medium text-gray-900 mb-1">Send Feedback</h3><p class="text-sm text-gray-600">Help us improve the app</p></button>
+    </div>
+   </div>
+  </main>
+  <script>
+        // Default configuration
+        const defaultConfig = {
+            page_title: "Healthcare Settings",
+            user_name: "Sarah Johnson",
+            support_email: "support@healthcare.com"
+        };
+
+        // Settings storage
+        let userSettings = {
+            // Notification preferences
+            medAlerts: true,
+            missedDose: true,
+            refillAlerts: true,
+            refillThreshold: '5',
+            appt1Day: true,
+            appt2Hour: true,
+            appt30Min: false,
+            labResults: true,
+            soundNotif: true,
+            vibration: true,
+            
+            // Personal information
+            fullName: 'Sarah Johnson',
+            email: 'sarah.johnson@email.com',
+            phone: '+1 (555) 123-4567',
+            dob: '1985-06-15',
+            emergencyName: 'John Johnson',
+            emergencyPhone: '+1 (555) 987-6543',
+            insurance: 'Blue Cross Blue Shield',
+            medicalId: 'MED123456789',
+            
+            // Healthcare providers
+            primaryDoctor: 'Dr. Amanda Foster',
+            primaryHospital: 'City General Hospital',
+            cardiologist: 'Dr. Mark Anderson',
+            pharmacy: 'CVS Pharmacy - Main Street',
+            pharmacyPhone: '+1 (555) 246-8135',
+            specialist: 'Dr. Rachel Green - Mental Health',
+            
+            // Medication settings
+            morningTime: '08:00',
+            afternoonTime: '14:00',
+            eveningTime: '20:00',
+            bedtimeTime: '22:00',
+            interactionWarnings: true,
+            duplicateAlerts: true,
+            snoozeDuration: '15',
+            maxSnooze: '3',
+            
+            // Privacy & security
+            shareProviders: true,
+            emergencyAccess: true,
+            analytics: false,
+            autoBackup: true,
+            biometric: true,
+            autoLock: '5',
+            
+            // Display preferences
+            theme: 'light',
+            fontSize: 'medium',
+            language: 'en',
+            timeFormat: '12',
+            
+            // App behavior
+            autoSync: true,
+            syncFreq: '5min',
+            offlineMode: true
+        };
+
+        function initializeApp() {
+            // Load saved settings
+            loadSettings();
+            // Initialize all sections as collapsed except notifications
+            initializeSections();
+        }
+
+        function loadSettings() {
+            // In a real app, this would load from localStorage or API
+            // For demo, we'll use the default values
+        }
+
+        function initializeSections() {
+            // Keep notifications expanded by default, collapse others
+            const sections = ['personal', 'providers', 'medication', 'privacy', 'display', 'behavior'];
+            sections.forEach(section => {
+                const content = document.getElementById(`${section}-content`);
+                const arrow = document.getElementById(`${section}-arrow`);
+                content.classList.remove('expanded');
+                arrow.classList.add('rotate-180');
+            });
+        }
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(`${sectionId}-content`);
+            const arrow = document.getElementById(`${sectionId}-arrow`);
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                arrow.classList.add('rotate-180');
+            } else {
+                content.classList.add('expanded');
+                arrow.classList.remove('rotate-180');
+            }
+        }
+
+        function saveSetting(key, value) {
+            userSettings[key] = value;
+            showSaveIndicator();
+            
+            // In a real app, this would save to localStorage or API
+            console.log(`Saved ${key}: ${value}`);
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('save-indicator');
+            indicator.classList.add('show');
+            
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function selectTheme(theme, element) {
+            // Remove selected class from all theme options
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('selected');
+                option.classList.remove('border-blue-500');
+                option.classList.add('border-gray-200');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            element.classList.add('border-blue-500');
+            element.classList.remove('border-gray-200');
+            
+            saveSetting('theme', theme);
+        }
+
+        function exportData() {
+            showToast('Preparing data export...', 'info');
+            
+            // Simulate export process
+            setTimeout(() => {
+                const dataBlob = new Blob([JSON.stringify(userSettings, null, 2)], {
+                    type: 'application/json'
+                });
+                const url = URL.createObjectURL(dataBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'healthcare-settings.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast('Settings exported successfully!', 'success');
+            }, 1000);
+        }
+
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
+                // Reset all form values to defaults
+                location.reload();
+                showToast('Settings reset to defaults', 'info');
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear ALL data? This will permanently delete all your information and cannot be undone.')) {
+                if (confirm('This is your final warning. All data will be permanently deleted. Continue?')) {
+                    showToast('All data cleared', 'success');
+                    // In a real app, this would clear all user data
+                }
+            }
+        }
+
+        function showHelp() {
+            showToast('Opening help center...', 'info');
+        }
+
+        function contactSupport() {
+            const email = document.getElementById('support-email').textContent;
+            showToast(`Opening email to ${email}...`, 'info');
+        }
+
+        function sendFeedback() {
+            showToast('Opening feedback form...', 'info');
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getToastClass(type)} fade-in`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    ${getToastIcon(type)}
+                    <p class="ml-3 text-sm font-medium">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        function getToastClass(type) {
+            switch (type) {
+                case 'success': return 'bg-green-50 border border-green-200 text-green-800';
+                case 'error': return 'bg-red-50 border border-red-200 text-red-800';
+                case 'info': return 'bg-blue-50 border border-blue-200 text-blue-800';
+                default: return 'bg-gray-50 border border-gray-200 text-gray-800';
+            }
+        }
+
+        function getToastIcon(type) {
+            switch (type) {
+                case 'success':
+                    return `<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>`;
+                case 'error':
+                    return `<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>`;
+                case 'info':
+                    return `<svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>`;
+                default: return '';
+            }
+        }
+
+        // Element SDK implementation
+        async function onConfigChange(config) {
+            const pageTitle = config.page_title || defaultConfig.page_title;
+            const userName = config.user_name || defaultConfig.user_name;
+            const supportEmail = config.support_email || defaultConfig.support_email;
+
+            document.getElementById('page-title').textContent = pageTitle;
+            document.getElementById('user-name').textContent = userName;
+            document.getElementById('support-email').textContent = supportEmail;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["page_title", config.page_title || defaultConfig.page_title],
+                ["user_name", config.user_name || defaultConfig.user_name],
+                ["support_email", config.support_email || defaultConfig.support_email]
+            ]);
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange,
+                    mapToCapabilities,
+                    mapToEditPanelValues
+                });
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99436370811e9a57',t:'MTc2MTQxMjg2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

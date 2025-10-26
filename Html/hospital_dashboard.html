@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Dashboard</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #1e40af, #3b82f6);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .sidebar-item svg {
+            margin-right: 0.75rem;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .staff-card, .patient-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .staff-card:hover, .patient-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-available {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-busy {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-stable {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-recovering {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            height: 300px;
+        }
+        
+        .profile-card {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="bg-gray-50 font-sans"><!-- Mobile Menu Button --> <button id="mobile-menu-btn" class="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg">
+   <svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+   </svg></button>
+  <div class="flex h-screen"><!-- Sidebar -->
+   <div id="sidebar" class="sidebar w-64 p-6 fixed md:relative h-full z-40"><!-- Logo -->
+    <div class="flex items-center mb-8">
+     <div class="h-10 w-10 bg-white rounded-lg flex items-center justify-center mr-3">
+      <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 8h3m-3 4h3m-3 4h3m6-4h.01M17 16h.01"></path>
+      </svg>
+     </div>
+     <h2 class="text-xl font-bold text-white">HealthCare</h2>
+    </div><!-- Navigation -->
+    <nav class="space-y-2"><a href="#" class="sidebar-item active" onclick="setActiveNav(this)">
+      <svg fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+      </svg> Overview </a> <a href="#" class="sidebar-item" onclick="setActiveNav(this)">
+      <svg fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg> Appointments </a> <a href="#" class="sidebar-item" onclick="setActiveNav(this)">
+      <svg fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+      </svg> User Management </a> <a href="#" class="sidebar-item" onclick="setActiveNav(this)">
+      <svg fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+      </svg> Settings </a>
+     <div class="pt-4 mt-4 border-t border-white border-opacity-20"><a href="#" class="sidebar-item" onclick="handleLogout()">
+       <svg fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+       </svg> Logout </a>
+     </div>
+    </nav>
+   </div><!-- Main Content -->
+   <div class="flex-1 md:ml-0 ml-0"><!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 p-6">
+     <div class="flex items-center justify-between">
+      <div>
+       <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+       <p class="text-gray-600">Welcome back! Here's what's happening at your hospital today.</p>
+      </div>
+      <div class="flex items-center space-x-4">
+       <div class="text-right">
+        <p id="admin-name" class="font-semibold text-gray-900">Dr. Sarah Johnson</p>
+        <p class="text-sm text-gray-500">Administrator</p>
+       </div>
+       <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+        <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+    </header><!-- Dashboard Content -->
+    <main class="p-6 space-y-6 overflow-y-auto" style="height: calc(100vh - 88px);"><!-- Hospital Profile -->
+     <div class="profile-card fade-in">
+      <div class="flex items-center justify-between">
+       <div>
+        <h2 id="hospital-name" class="text-2xl font-bold mb-2">Central Medical Hospital</h2>
+        <p id="hospital-address" class="text-blue-100 mb-4">123 Healthcare Avenue, Medical District, City 12345</p>
+        <div class="flex items-center space-x-6">
+         <div class="text-center">
+          <p class="text-2xl font-bold">24/7</p>
+          <p class="text-sm text-blue-100">Emergency Care</p>
+         </div>
+         <div class="text-center">
+          <p class="text-2xl font-bold">15+</p>
+          <p class="text-sm text-blue-100">Departments</p>
+         </div>
+         <div class="text-center">
+          <p class="text-2xl font-bold">500+</p>
+          <p class="text-sm text-blue-100">Bed Capacity</p>
+         </div>
+        </div>
+       </div>
+       <div class="h-24 w-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+        <svg class="h-12 w-12 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 8h3m-3 4h3m-3 4h3m6-4h.01M17 16h.01"></path>
+        </svg>
+       </div>
+      </div>
+     </div><!-- Statistics Cards -->
+     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 fade-in"><!-- Total Professionals -->
+      <div class="stat-card">
+       <div class="stat-icon bg-blue-100">
+        <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+       </div>
+       <h3 class="text-lg font-semibold text-gray-900 mb-1">Total Professionals</h3>
+       <p id="total-professionals" class="text-3xl font-bold text-blue-600">245</p>
+       <p class="text-sm text-gray-500 mt-1">+12 this month</p>
+      </div><!-- Total Patients -->
+      <div class="stat-card">
+       <div class="stat-icon bg-green-100">
+        <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+        </svg>
+       </div>
+       <h3 class="text-lg font-semibold text-gray-900 mb-1">Total Patients</h3>
+       <p id="total-patients" class="text-3xl font-bold text-green-600">1,847</p>
+       <p class="text-sm text-gray-500 mt-1">+89 this week</p>
+      </div><!-- Today's Appointments -->
+      <div class="stat-card">
+       <div class="stat-icon bg-yellow-100">
+        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+       </div>
+       <h3 class="text-lg font-semibold text-gray-900 mb-1">Today's Appointments</h3>
+       <p class="text-3xl font-bold text-yellow-600">127</p>
+       <p class="text-sm text-gray-500 mt-1">18 pending</p>
+      </div><!-- Bed Occupancy -->
+      <div class="stat-card">
+       <div class="stat-icon bg-purple-100">
+        <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+        </svg>
+       </div>
+       <h3 class="text-lg font-semibold text-gray-900 mb-1">Bed Occupancy</h3>
+       <p class="text-3xl font-bold text-purple-600">78%</p>
+       <p class="text-sm text-gray-500 mt-1">392 of 500 beds</p>
+      </div>
+     </div><!-- Charts Section -->
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in"><!-- Patient Visits Chart -->
+      <div class="chart-container">
+       <h3 class="text-lg font-semibold text-gray-900 mb-4">Patient Visits (Last 7 Days)</h3>
+       <canvas id="visitsChart"></canvas>
+      </div><!-- Department Distribution -->
+      <div class="chart-container">
+       <h3 class="text-lg font-semibold text-gray-900 mb-4">Department Distribution</h3>
+       <canvas id="departmentChart"></canvas>
+      </div>
+     </div><!-- Staff and Patients Section -->
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in"><!-- Staff Directory -->
+      <div class="bg-white rounded-xl p-6 shadow-sm">
+       <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">Medical Staff</h3><a href="#" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
+       </div>
+       <div class="space-y-4">
+        <div class="staff-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Dr. Michael Chen</h4>
+            <p class="text-sm text-gray-500">Cardiologist</p>
+            <p class="text-xs text-gray-400">Ext: 2341</p>
+           </div>
+          </div><span class="status-badge status-available">Available</span>
+         </div>
+        </div>
+        <div class="staff-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-pink-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Dr. Emily Rodriguez</h4>
+            <p class="text-sm text-gray-500">Pediatrician</p>
+            <p class="text-xs text-gray-400">Ext: 2156</p>
+           </div>
+          </div><span class="status-badge status-busy">In Surgery</span>
+         </div>
+        </div>
+        <div class="staff-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Nurse Jennifer Adams</h4>
+            <p class="text-sm text-gray-500">ICU Specialist</p>
+            <p class="text-xs text-gray-400">Ext: 2789</p>
+           </div>
+          </div><span class="status-badge status-available">Available</span>
+         </div>
+        </div>
+        <div class="staff-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Dr. Robert Kim</h4>
+            <p class="text-sm text-gray-500">Orthopedic Surgeon</p>
+            <p class="text-xs text-gray-400">Ext: 2445</p>
+           </div>
+          </div><span class="status-badge status-busy">With Patient</span>
+         </div>
+        </div>
+        <div class="staff-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Nurse Maria Santos</h4>
+            <p class="text-sm text-gray-500">Emergency Room</p>
+            <p class="text-xs text-gray-400">Ext: 2001</p>
+           </div>
+          </div><span class="status-badge status-available">Available</span>
+         </div>
+        </div>
+       </div>
+      </div><!-- Recent Patients -->
+      <div class="bg-white rounded-xl p-6 shadow-sm">
+       <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">Recent Patients</h3><a href="#" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View All</a>
+       </div>
+       <div class="space-y-4">
+        <div class="patient-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">John Anderson</h4>
+            <p class="text-sm text-gray-500">ID: P-2024-001</p>
+            <p class="text-xs text-gray-400">Last visit: Today, 2:30 PM</p>
+           </div>
+          </div><span class="status-badge status-stable">Stable</span>
+         </div>
+        </div>
+        <div class="patient-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Sarah Williams</h4>
+            <p class="text-sm text-gray-500">ID: P-2024-002</p>
+            <p class="text-xs text-gray-400">Last visit: Today, 1:15 PM</p>
+           </div>
+          </div><span class="status-badge status-recovering">Recovering</span>
+         </div>
+        </div>
+        <div class="patient-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Michael Brown</h4>
+            <p class="text-sm text-gray-500">ID: P-2024-003</p>
+            <p class="text-xs text-gray-400">Last visit: Yesterday, 4:45 PM</p>
+           </div>
+          </div><span class="status-badge status-critical">Critical</span>
+         </div>
+        </div>
+        <div class="patient-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">Lisa Davis</h4>
+            <p class="text-sm text-gray-500">ID: P-2024-004</p>
+            <p class="text-xs text-gray-400">Last visit: Yesterday, 11:20 AM</p>
+           </div>
+          </div><span class="status-badge status-stable">Stable</span>
+         </div>
+        </div>
+        <div class="patient-card">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center">
+           <div class="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+           </div>
+           <div>
+            <h4 class="font-semibold text-gray-900">David Wilson</h4>
+            <p class="text-sm text-gray-500">ID: P-2024-005</p>
+            <p class="text-xs text-gray-400">Last visit: 2 days ago</p>
+           </div>
+          </div><span class="status-badge status-recovering">Recovering</span>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </main>
+   </div>
+  </div>
+  <script>
+        // Default configuration
+        const defaultConfig = {
+            hospital_name: "Central Medical Hospital",
+            hospital_address: "123 Healthcare Avenue, Medical District, City 12345",
+            admin_name: "Dr. Sarah Johnson",
+            total_professionals: "245",
+            total_patients: "1,847"
+        };
+
+        // Mobile menu functionality
+        function initializeMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 768 && 
+                    !sidebar.contains(e.target) && 
+                    !mobileMenuBtn.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        }
+
+        // Navigation functionality
+        function setActiveNav(element) {
+            // Remove active class from all nav items
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            element.classList.add('active');
+            
+            // Close mobile menu after selection
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                showToast('Logging out...', 'info');
+                // Simulate logout process
+                setTimeout(() => {
+                    showToast('Successfully logged out', 'success');
+                }, 1500);
+            }
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Patient Visits Chart
+            const visitsCtx = document.getElementById('visitsChart').getContext('2d');
+            new Chart(visitsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Patient Visits',
+                        data: [120, 135, 98, 156, 142, 89, 67],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Department Distribution Chart
+            const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+            new Chart(departmentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Emergency', 'Cardiology', 'Pediatrics', 'Orthopedics', 'Others'],
+                    datasets: [{
+                        data: [25, 20, 18, 15, 22],
+                        backgroundColor: [
+                            '#ef4444',
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getToastClass(type)} fade-in`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    ${getToastIcon(type)}
+                    <p class="ml-3 text-sm font-medium">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 4000);
+        }
+
+        function getToastClass(type) {
+            switch (type) {
+                case 'success': return 'bg-green-50 border border-green-200 text-green-800';
+                case 'error': return 'bg-red-50 border border-red-200 text-red-800';
+                case 'info': return 'bg-blue-50 border border-blue-200 text-blue-800';
+                default: return 'bg-gray-50 border border-gray-200 text-gray-800';
+            }
+        }
+
+        function getToastIcon(type) {
+            switch (type) {
+                case 'success':
+                    return `<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>`;
+                case 'error':
+                    return `<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>`;
+                case 'info':
+                    return `<svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>`;
+                default: return '';
+            }
+        }
+
+        // Element SDK implementation
+        async function onConfigChange(config) {
+            const hospitalName = config.hospital_name || defaultConfig.hospital_name;
+            const hospitalAddress = config.hospital_address || defaultConfig.hospital_address;
+            const adminName = config.admin_name || defaultConfig.admin_name;
+            const totalProfessionals = config.total_professionals || defaultConfig.total_professionals;
+            const totalPatients = config.total_patients || defaultConfig.total_patients;
+
+            document.getElementById('hospital-name').textContent = hospitalName;
+            document.getElementById('hospital-address').textContent = hospitalAddress;
+            document.getElementById('admin-name').textContent = adminName;
+            document.getElementById('total-professionals').textContent = totalProfessionals;
+            document.getElementById('total-patients').textContent = totalPatients;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["hospital_name", config.hospital_name || defaultConfig.hospital_name],
+                ["hospital_address", config.hospital_address || defaultConfig.hospital_address],
+                ["admin_name", config.admin_name || defaultConfig.admin_name],
+                ["total_professionals", config.total_professionals || defaultConfig.total_professionals],
+                ["total_patients", config.total_patients || defaultConfig.total_patients]
+            ]);
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeMobileMenu();
+            initializeCharts();
+            
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange,
+                    mapToCapabilities,
+                    mapToEditPanelValues
+                });
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9944f7e6a2bfbd9b',t:'MTc2MTQyOTQzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

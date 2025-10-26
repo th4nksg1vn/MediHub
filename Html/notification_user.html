@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Notifications</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse-urgent {
+            animation: pulseUrgent 2s infinite;
+        }
+        
+        @keyframes pulseUrgent {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        
+        .notification-card {
+            transition: all 0.3s ease;
+        }
+        
+        .notification-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .priority-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        
+        .snooze-dropdown {
+            transform: translateY(-10px);
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        
+        .snooze-dropdown.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .notification-badge {
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .time-ago {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="min-h-full bg-gradient-to-br from-blue-50 to-purple-100 font-sans"><!-- Header -->
+  <header class="bg-white shadow-lg border-b">
+   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex items-center justify-between">
+     <div class="flex items-center space-x-4">
+      <div class="relative h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+       <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+       </svg>
+       <div id="notification-badge" class="notification-badge absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full flex items-center justify-center"><span class="text-xs font-bold text-white">8</span>
+       </div>
+      </div>
+      <div>
+       <h1 id="page-title" class="text-3xl font-bold text-gray-900">Health Notifications</h1>
+       <p class="text-sm text-gray-600">Stay on top of your healthcare reminders</p>
+      </div>
+     </div>
+     <div class="text-right">
+      <p id="patient-name" class="text-xl font-semibold text-gray-900">Sarah Johnson</p>
+      <p class="text-sm text-gray-600" id="current-time">Today, December 15, 2024 - 2:30 PM</p>
+     </div>
+    </div>
+   </div>
+  </header>
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Quick Stats -->
+   <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm p-6 border">
+     <div class="flex items-center">
+      <div class="flex-shrink-0">
+       <div class="h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center">
+        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+       </div>
+      </div>
+      <div class="ml-4">
+       <p class="text-sm font-medium text-gray-600">Urgent</p>
+       <p id="urgent-count" class="text-2xl font-bold text-gray-900">3</p>
+      </div>
+     </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6 border">
+     <div class="flex items-center">
+      <div class="flex-shrink-0">
+       <div class="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+        <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+       </div>
+      </div>
+      <div class="ml-4">
+       <p class="text-sm font-medium text-gray-600">Total Notifications</p>
+       <p id="total-count" class="text-2xl font-bold text-gray-900">12</p>
+      </div>
+     </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6 border">
+     <div class="flex items-center">
+      <div class="flex-shrink-0">
+       <div class="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+        <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+       </div>
+      </div>
+      <div class="ml-4">
+       <p class="text-sm font-medium text-gray-600">Completed Today</p>
+       <p id="completed-count" class="text-2xl font-bold text-gray-900">5</p>
+      </div>
+     </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6 border">
+     <div class="flex items-center">
+      <div class="flex-shrink-0">
+       <div class="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center">
+        <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+       </div>
+      </div>
+      <div class="ml-4">
+       <p class="text-sm font-medium text-gray-600">Upcoming</p>
+       <p id="upcoming-count" class="text-2xl font-bold text-gray-900">4</p>
+      </div>
+     </div>
+    </div>
+   </div><!-- Filter Controls -->
+   <div class="bg-white rounded-xl shadow-sm border mb-8 p-6">
+    <div class="flex items-center justify-between">
+     <div class="flex items-center space-x-4">
+      <h2 class="text-lg font-semibold text-gray-900">Notifications</h2>
+      <div class="flex space-x-2"><button id="filter-all" onclick="filterNotifications('all')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"> All </button> <button id="filter-unread" onclick="filterNotifications('unread')" class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300"> Unread Only </button>
+      </div>
+     </div><button onclick="markAllAsRead()" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"> Mark All as Read </button>
+    </div>
+   </div><!-- Notifications List -->
+   <div class="space-y-4" id="notifications-container"><!-- Notifications will be populated here -->
+   </div>
+  </main>
+  <script>
+        // Default configuration
+        const defaultConfig = {
+            page_title: "Health Notifications",
+            patient_name: "Sarah Johnson",
+            notification_settings: "Don't forget your health reminders!"
+        };
+
+        // Sample notifications data
+        let notifications = [
+            {
+                id: "1",
+                type: "medication",
+                priority: "high",
+                title: "Medication Due Now",
+                message: "Time to take your Lisinopril 10mg",
+                time: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
+                read: false,
+                category: "Medication Reminder",
+                actionRequired: true,
+                icon: "pill"
+            },
+            {
+                id: "2",
+                type: "appointment",
+                priority: "high",
+                title: "Appointment Tomorrow",
+                message: "Cardiology appointment with Dr. Anderson at 2:00 PM",
+                time: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+                read: false,
+                category: "Upcoming Appointment",
+                actionRequired: true,
+                icon: "calendar"
+            },
+            {
+                id: "3",
+                type: "lab",
+                priority: "medium",
+                title: "Lab Results Ready",
+                message: "Your blood work results are available for pickup",
+                time: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+                read: false,
+                category: "Lab Results",
+                actionRequired: false,
+                icon: "clipboard"
+            },
+            {
+                id: "4",
+                type: "medication",
+                priority: "medium",
+                title: "Prescription Refill",
+                message: "Metformin prescription expires in 3 days",
+                time: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+                read: false,
+                category: "Prescription Alert",
+                actionRequired: true,
+                icon: "pill"
+            },
+            {
+                id: "5",
+                type: "appointment",
+                priority: "low",
+                title: "Schedule Annual Checkup",
+                message: "It's time for your yearly physical examination",
+                time: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+                read: false,
+                category: "Health Reminder",
+                actionRequired: true,
+                icon: "heart"
+            },
+            {
+                id: "6",
+                type: "medication",
+                priority: "high",
+                title: "Missed Dose Alert",
+                message: "You missed your evening Atorvastatin dose",
+                time: new Date(Date.now() - 18 * 60 * 60 * 1000), // 18 hours ago
+                read: false,
+                category: "Medication Alert",
+                actionRequired: true,
+                icon: "exclamation"
+            },
+            {
+                id: "7",
+                type: "reminder",
+                priority: "medium",
+                title: "Blood Pressure Check",
+                message: "Remember to check your blood pressure today",
+                time: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+                read: false,
+                category: "Health Task",
+                actionRequired: false,
+                icon: "heart"
+            },
+            {
+                id: "8",
+                type: "appointment",
+                priority: "medium",
+                title: "Appointment Confirmation",
+                message: "Please confirm your appointment for next week",
+                time: new Date(Date.now() - 36 * 60 * 60 * 1000), // 1.5 days ago
+                read: false,
+                category: "Appointment Reminder",
+                actionRequired: true,
+                icon: "calendar"
+            },
+            {
+                id: "9",
+                type: "medication",
+                priority: "low",
+                title: "Vitamin D Reminder",
+                message: "Don't forget your daily Vitamin D supplement",
+                time: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
+                read: true,
+                category: "Daily Reminder",
+                actionRequired: false,
+                icon: "pill"
+            },
+            {
+                id: "10",
+                type: "lab",
+                priority: "medium",
+                title: "Lab Appointment Scheduled",
+                message: "Blood work scheduled for Friday at 9:00 AM",
+                time: new Date(Date.now() - 72 * 60 * 60 * 1000), // 3 days ago
+                read: true,
+                category: "Lab Schedule",
+                actionRequired: false,
+                icon: "clipboard"
+            },
+            {
+                id: "11",
+                type: "reminder",
+                priority: "low",
+                title: "Exercise Reminder",
+                message: "Time for your daily 30-minute walk",
+                time: new Date(Date.now() - 96 * 60 * 60 * 1000), // 4 days ago
+                read: true,
+                category: "Wellness Reminder",
+                actionRequired: false,
+                icon: "activity"
+            },
+            {
+                id: "12",
+                type: "appointment",
+                priority: "low",
+                title: "Follow-up Scheduled",
+                message: "Follow-up appointment scheduled for next month",
+                time: new Date(Date.now() - 120 * 60 * 60 * 1000), // 5 days ago
+                read: true,
+                category: "Future Appointment",
+                actionRequired: false,
+                icon: "calendar"
+            }
+        ];
+
+        let currentFilter = 'all';
+
+        function initializeApp() {
+            updateCurrentTime();
+            updateStats();
+            renderNotifications();
+            
+            // Update time every minute
+            setInterval(updateCurrentTime, 60000);
+            // Check for new notifications every 30 seconds
+            setInterval(checkForNewNotifications, 30000);
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        function updateStats() {
+            const urgentCount = notifications.filter(n => n.priority === 'high' && !n.read).length;
+            const totalCount = notifications.length;
+            const completedCount = notifications.filter(n => n.read).length;
+            const upcomingCount = notifications.filter(n => !n.read && n.actionRequired).length;
+            const unreadCount = notifications.filter(n => !n.read).length;
+
+            document.getElementById('urgent-count').textContent = urgentCount;
+            document.getElementById('total-count').textContent = totalCount;
+            document.getElementById('completed-count').textContent = completedCount;
+            document.getElementById('upcoming-count').textContent = upcomingCount;
+            document.getElementById('notification-badge').textContent = unreadCount;
+            
+            // Hide badge if no unread notifications
+            if (unreadCount === 0) {
+                document.getElementById('notification-badge').style.display = 'none';
+            } else {
+                document.getElementById('notification-badge').style.display = 'flex';
+            }
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notifications-container');
+            container.innerHTML = '';
+
+            let filteredNotifications = notifications;
+            if (currentFilter === 'unread') {
+                filteredNotifications = notifications.filter(n => !n.read);
+            }
+
+            // Sort by priority and time
+            filteredNotifications.sort((a, b) => {
+                const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                }
+                return new Date(b.time) - new Date(a.time);
+            });
+
+            filteredNotifications.forEach(notification => {
+                const notificationElement = createNotificationElement(notification);
+                container.appendChild(notificationElement);
+            });
+
+            if (filteredNotifications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
+                        <p class="mt-1 text-sm text-gray-500">You're all caught up!</p>
+                    </div>
+                `;
+            }
+        }
+
+        function createNotificationElement(notification) {
+            const div = document.createElement('div');
+            const isUrgent = notification.priority === 'high' && !notification.read;
+            
+            div.className = `notification-card relative bg-white rounded-xl shadow-sm border-2 p-6 ${
+                notification.read ? 'border-gray-200 opacity-75' : 'border-gray-200'
+            } ${isUrgent ? 'pulse-urgent border-red-300' : ''} ${
+                !notification.read ? 'bg-blue-50' : ''
+            }`;
+
+            const timeAgo = getTimeAgo(notification.time);
+            
+            div.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start space-x-4 flex-1">
+                        <div class="relative flex-shrink-0">
+                            <div class="h-12 w-12 ${getPriorityColor(notification.priority)} rounded-lg flex items-center justify-center">
+                                ${getNotificationIcon(notification.icon)}
+                            </div>
+                            ${!notification.read ? `<div class="priority-indicator ${getPriorityIndicatorColor(notification.priority)}"></div>` : ''}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <h3 class="text-lg font-semibold text-gray-900">${notification.title}</h3>
+                                <span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityBadgeClass(notification.priority)}">
+                                    ${notification.priority.toUpperCase()}
+                                </span>
+                                ${notification.actionRequired ? `
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+                                        Action Required
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <p class="text-gray-700 mb-2">${notification.message}</p>
+                            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                <span class="flex items-center">
+                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                    </svg>
+                                    ${notification.category}
+                                </span>
+                                <span class="time-ago">${timeAgo}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 ml-4">
+                        ${!notification.read ? `
+                            <div class="relative">
+                                <button onclick="toggleSnoozeDropdown('${notification.id}')" class="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                                <div id="snooze-${notification.id}" class="snooze-dropdown hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                                    <div class="py-1">
+                                        <button onclick="snoozeNotification('${notification.id}', 15)" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Snooze 15 minutes</button>
+                                        <button onclick="snoozeNotification('${notification.id}', 60)" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Snooze 1 hour</button>
+                                        <button onclick="snoozeNotification('${notification.id}', 240)" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Snooze 4 hours</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="markAsRead('${notification.id}')" class="p-2 text-gray-400 hover:text-green-600 rounded-md hover:bg-green-50">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </button>
+                        ` : `
+                            <div class="flex items-center text-green-600">
+                                <svg class="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span class="text-sm">Read</span>
+                            </div>
+                        `}
+                        <button onclick="dismissNotification('${notification.id}')" class="p-2 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        function getNotificationIcon(iconType) {
+            const icons = {
+                pill: `<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                </svg>`,
+                calendar: `<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>`,
+                clipboard: `<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>`,
+                heart: `<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>`,
+                exclamation: `<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>`,
+                activity: `<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>`
+            };
+            return icons[iconType] || icons.pill;
+        }
+
+        function getPriorityColor(priority) {
+            switch (priority) {
+                case 'high': return 'bg-red-500';
+                case 'medium': return 'bg-yellow-500';
+                case 'low': return 'bg-green-500';
+                default: return 'bg-gray-500';
+            }
+        }
+
+        function getPriorityIndicatorColor(priority) {
+            switch (priority) {
+                case 'high': return 'bg-red-500';
+                case 'medium': return 'bg-yellow-500';
+                case 'low': return 'bg-green-500';
+                default: return 'bg-gray-500';
+            }
+        }
+
+        function getPriorityBadgeClass(priority) {
+            switch (priority) {
+                case 'high': return 'bg-red-100 text-red-800';
+                case 'medium': return 'bg-yellow-100 text-yellow-800';
+                case 'low': return 'bg-green-100 text-green-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getTimeAgo(time) {
+            const now = new Date();
+            const diff = now - new Date(time);
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        }
+
+        function filterNotifications(filter) {
+            currentFilter = filter;
+            
+            // Update button styles
+            document.getElementById('filter-all').className = filter === 'all' 
+                ? 'px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700'
+                : 'px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300';
+            
+            document.getElementById('filter-unread').className = filter === 'unread'
+                ? 'px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700'
+                : 'px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300';
+            
+            renderNotifications();
+        }
+
+        function markAsRead(notificationId) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (notification) {
+                notification.read = true;
+                updateStats();
+                renderNotifications();
+                showToast(`Notification marked as read`, 'success');
+            }
+        }
+
+        function markAllAsRead() {
+            notifications.forEach(n => n.read = true);
+            updateStats();
+            renderNotifications();
+            showToast(`All notifications marked as read`, 'success');
+        }
+
+        function dismissNotification(notificationId) {
+            const index = notifications.findIndex(n => n.id === notificationId);
+            if (index !== -1) {
+                const notification = notifications[index];
+                notifications.splice(index, 1);
+                updateStats();
+                renderNotifications();
+                showToast(`Notification dismissed`, 'info');
+            }
+        }
+
+        function toggleSnoozeDropdown(notificationId) {
+            const dropdown = document.getElementById(`snooze-${notificationId}`);
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            // Hide all other dropdowns
+            document.querySelectorAll('.snooze-dropdown').forEach(d => {
+                d.classList.add('hidden');
+                d.classList.remove('show');
+            });
+            
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                setTimeout(() => dropdown.classList.add('show'), 10);
+            }
+        }
+
+        function snoozeNotification(notificationId, minutes) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (notification) {
+                // Update the notification time to current time + snooze duration
+                notification.time = new Date(Date.now() + minutes * 60 * 1000);
+                
+                // Hide dropdown
+                document.getElementById(`snooze-${notificationId}`).classList.add('hidden');
+                
+                renderNotifications();
+                showToast(`Notification snoozed for ${minutes} minutes`, 'info');
+            }
+        }
+
+        function checkForNewNotifications() {
+            // Simulate checking for new notifications
+            // In a real app, this would make an API call
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getToastClass(type)} fade-in`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    ${getToastIcon(type)}
+                    <p class="ml-3 text-sm font-medium">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        function getToastClass(type) {
+            switch (type) {
+                case 'success': return 'bg-green-50 border border-green-200 text-green-800';
+                case 'error': return 'bg-red-50 border border-red-200 text-red-800';
+                case 'info': return 'bg-blue-50 border border-blue-200 text-blue-800';
+                default: return 'bg-gray-50 border border-gray-200 text-gray-800';
+            }
+        }
+
+        function getToastIcon(type) {
+            switch (type) {
+                case 'success':
+                    return `<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>`;
+                case 'error':
+                    return `<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>`;
+                case 'info':
+                    return `<svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>`;
+                default: return '';
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.snooze-dropdown') && !event.target.closest('button')) {
+                document.querySelectorAll('.snooze-dropdown').forEach(d => {
+                    d.classList.add('hidden');
+                    d.classList.remove('show');
+                });
+            }
+        });
+
+        // Element SDK implementation
+        async function onConfigChange(config) {
+            const pageTitle = config.page_title || defaultConfig.page_title;
+            const patientName = config.patient_name || defaultConfig.patient_name;
+
+            document.getElementById('page-title').textContent = pageTitle;
+            document.getElementById('patient-name').textContent = patientName;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["page_title", config.page_title || defaultConfig.page_title],
+                ["patient_name", config.patient_name || defaultConfig.patient_name],
+                ["notification_settings", config.notification_settings || defaultConfig.notification_settings]
+            ]);
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange,
+                    mapToCapabilities,
+                    mapToEditPanelValues
+                });
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'994352317434ccf4',t:'MTc2MTQxMjE2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
