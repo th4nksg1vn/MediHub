@@ -7,6 +7,7 @@ type ProfileInsert = Tables["users"]["Insert"];
 export default function OnboardingPage() {
   const [name, setName] = useState("");
   const [institution, setInstitution] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState("patient");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -40,6 +41,7 @@ export default function OnboardingPage() {
         email: user.email ?? undefined,
         full_name: name,
         institution,
+        contact: phone || undefined,
         role: role as UserRole,
         updated_at: new Date().toISOString(),
       };
