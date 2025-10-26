@@ -141,7 +141,19 @@ def call_ai(prompt: str, system_prompt: str = None):
 
 @app.get("/")
 def root():
-    return {"message": "MediHub AI Health Assistant is running."}
+    return {
+        "message": "MediHub AI Health Assistant is running.",
+        "docs": {
+            "swagger": "/docs",
+            "redoc": "/redoc"
+        },
+        "endpoints": {
+            "triage": "POST /ai/triage - Analyze symptoms and get urgency level",
+            "relief": "POST /ai/suggest-relief - Get home remedies and tips",
+            "risk": "POST /ai/predict-risk - Predict health risk from vitals"
+        },
+        "ai_provider": "OpenAI" if USE_OPENAI else ("Gemini" if GEMINI_API_KEY else "Not configured")
+    }
 
 
 @app.post("/ai/triage", response_model=TriageResponse)
