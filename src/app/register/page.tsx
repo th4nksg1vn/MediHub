@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const [weight, setWeight] = useState("");
   const [bloodType, setBloodType] = useState("");
   const [allergies, setAllergies] = useState("");
+  const [phone, setPhone] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,6 +66,7 @@ export default function RegisterPage() {
             weight_kg: weight ? parseFloat(weight) : null,
             blood_type: bloodType || null,
             allergies: allergies ? allergies.split(',').map(a => a.trim()) : [],
+            contact: phone || null,
           }
         }),
         // Add organization data for admins
@@ -79,11 +81,12 @@ export default function RegisterPage() {
       setMessage(
         "Success! Check your email for the confirmation link to complete your registration."
       );
-      
-      // Redirect to role-specific onboarding
+
+      // Redirect to verification page where user can resend link and continue to onboarding
       setTimeout(() => {
-        router.push(`/onboarding/${selectedRole}`);
-      }, 2000);
+        const q = new URLSearchParams({ email, role: selectedRole as string });
+        router.push(`/verify?${q.toString()}`);
+      }, 1200);
 
     } catch (err) {
       setError(storeError || "Registration failed");
@@ -96,6 +99,27 @@ export default function RegisterPage() {
       await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/dashboard` } });
     } catch (err: any) {
       setError(err?.message || 'Google sign-up failed');
+      setOauthLoading(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!email) {
+      setError('Please enter your email to resend verification');
+      return;
+    }
+    try {
+      setOauthLoading(true);
+      // Use signInWithOtp to send a magic link / verification email
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage('Verification link sent — check your inbox.');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send verification');
+    } finally {
       setOauthLoading(false);
     }
   }
@@ -273,6 +297,23 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
+                Phone number
+              </label>
+              <div className="mt-1">
+                <input
+                  id="phone"
+                  type="tel"
+                  name="phone"
+                  className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 shadow-sm placeholder:text-slate-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600 sm:text-sm"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g., +1 555 555 5555"
+                />
+              </div>
+            </div>
           </>
         )}
 
@@ -372,135 +413,4 @@ export default function RegisterPage() {
       </form>
     </AuthLayout>
   );
-  
-  return (
-    <AuthLayout 
-      title="Create account"
-      subtitle="Sign up to get started with Medihub"
-    >
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-            Full name
-          </label>
-          <div className="mt-1">
-            <input
-              id="name"
-              type="text"
-              name="name"
-              required
-              className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 shadow-sm placeholder:text-slate-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600 sm:text-sm"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-            Email address
-          </label>
-          <div className="mt-1">
-            <input
-              id="email"
-              type="email"
-              name="email"
-              required
-              className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 shadow-sm placeholder:text-slate-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600 sm:text-sm"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-            Password
-          </label>
-          <div className="mt-1">
-            <input
-              id="password"
-              type="password"
-              name="password"
-              required
-              className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 shadow-sm placeholder:text-slate-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600 sm:text-sm"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-        </div>
-
-                  {(selectedRole === 'institution_admin' || selectedRole === 'company_admin') && (
-            <>
-              <div>
-                <label htmlFor="orgName" className="block text-sm font-medium text-slate-700">
-                  Organization name
-                </label>
-                <div className="mt-1">
-                  <input
-                    id="orgName"
-                    type="text"
-                    name="orgName"
-                    required
-                    className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 shadow-sm placeholder:text-slate-400 focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600 sm:text-sm"
-                    value={orgName}
-                    onChange={(e) => setOrgName(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="orgType" className="block text-sm font-medium text-slate-700">
-                  Organization type
-                </label>
-                <div className="mt-1">
-                  <select
-                    id="orgType"
-                    name="orgType"
-                    required
-                    className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600 sm:text-sm"
-                    value={orgType}
-                    onChange={(e) => setOrgType(e.target.value as OrganizationType)}
-                  >
-                    <option value="">Select type</option>
-                    <option value="medical_institution">Medical Institution</option>
-                    <option value="company">Company</option>
-                    <option value="school">School</option>
-                  </select>
-                </div>
-              </div>
-            </>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex w-full justify-center rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Creating account..." : "Create account"}
-            </button>
-          </div>
-
-          {error && (
-            <div className="text-sm text-red-600 text-center">
-              {error}
-            </div>
-          )}
-
-          {message && (
-            <div className="text-sm text-green-600 text-center">
-              {message}
-            </div>
-          )}
-
-          <div className="text-sm text-center">
-            <span className="text-slate-600">Already have an account?</span>{" "}
-            <Link href="/login" className="font-semibold text-sky-600 hover:text-sky-500">
-              Sign in
-            </Link>
-          </div>
-        </form>
-      </AuthLayout>
-    );
 }

@@ -11,14 +11,27 @@ export default function DevAuthStub() {
     // Only run when developer opts in via NEXT_PUBLIC_BYPASS_AUTH
     if (process.env.NEXT_PUBLIC_BYPASS_AUTH !== 'true') return;
 
+    // Allow selecting a dev role via NEXT_PUBLIC_DEV_ROLE (nav role: individual|researcher|institution|admin)
+    const devNavRole = (process.env.NEXT_PUBLIC_DEV_ROLE as any) || 'individual';
+
+    // Map nav role back to auth role where applicable
+    const navToAuth: Record<string, string> = {
+      individual: 'patient',
+      researcher: 'researcher',
+      institution: 'health_professional',
+      admin: 'admin',
+    };
+
+    const authRole = navToAuth[devNavRole] || 'patient';
+
     const mockAuthUser = {
       id: 'dev-user-1',
-      email: 'dev+individual@example.com',
-      role: 'patient',
+      email: `dev+${devNavRole}@example.com`,
+      role: authRole,
       profile: {
-        id: 'dev-patient-1',
+        id: 'dev-profile-1',
         auth_id: 'dev-user-1',
-        full_name: 'Dev Individual',
+        full_name: `Dev ${devNavRole}`,
       },
       organization: null,
     } as any;
@@ -29,9 +42,9 @@ export default function DevAuthStub() {
     // Also populate the role store so layout/nav components pick up the role
     const mockRoleUser = {
       id: 'dev-user-1',
-      email: 'dev+individual@example.com',
-      role: 'individual',
-      full_name: 'Dev Individual',
+      email: `dev+${devNavRole}@example.com`,
+      role: devNavRole,
+      full_name: `Dev ${devNavRole}`,
       organization: null,
     } as any;
 

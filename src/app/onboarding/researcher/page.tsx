@@ -8,6 +8,7 @@ export default function ResearcherOnboarding() {
   const [name, setName] = useState("");
   const [institution, setInstitution] = useState("");
   const [interests, setInterests] = useState("");
+  const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -39,6 +40,7 @@ export default function ResearcherOnboarding() {
         email: user.email ?? undefined,
         full_name: name,
         institution,
+        contact: phone || undefined,
         role: "researcher" as UserRole,
         // store interests in a free-text field for now
         metadata: { interests },

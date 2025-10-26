@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ThemeProvider from "./components/ThemeProvider";
 import DevAuthStub from "@/components/DevAuthStub";
+import AuthListener from "@/components/AuthListener";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
+          <AuthListener />
           {process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true' && <DevAuthStub />}
           <Header />
           <main className="site-main">{children}</main>
