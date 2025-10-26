@@ -5,7 +5,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
 import { getNavForRole } from "@/config/navigation";
 import { useRoleStore } from "@/store/useRoleStore";
-import SidebarLink from "@/components/SidebarLink";
+import SidebarLink from "@/components/ui/sidebarLink";
 
 export default function AppSidebar() {
   const { isExpanded } = useSidebar();
